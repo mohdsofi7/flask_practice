@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request,redirect
 from flask_sqlalchemy import SQLAlchemy
 import datetime
 from sqlalchemy import Integer, String
@@ -20,9 +20,7 @@ class Todo(db.Model):
         return f"{self.SNo}-{self.title}"
 
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+
 
 @app.route("/show")
 def products():
@@ -34,7 +32,6 @@ def index():
     if request.method=='POST':
         title = request.form['title']
         desc = request.form['desc']
-
         todo = Todo(title=title, desc=desc)
         db.session.add(todo)
         db.session.commit()
@@ -45,19 +42,31 @@ def index():
 def home():
     return "<p>This is my home page</p>"
 
-@app.route("/update")
-def update():
-    return "<p>This is my home page</p>"
+@app.route("/update/<int:SNo>",methods=['GET', 'POST'])
+def update(SNo):
+    if request.method=='POST':
+        title = request.form['title']
+        desc = request.form['desc']
+        todo = Todo.query.filter_by(SNo=SNo).first()
+        todo.title = title
+        todo.desc=desc
+        db.session.add(todo)
+        db.session.commit()
+        return redirect("/index")
+
+    todo = Todo.query.filter_by(SNo=SNo).first()
+    return render_template("update.html",todo=todo)
 
 
-@app.route("/delete/<int")
-def delete():
-    allTodo = Todo.query.filter_by(SNO=SNO)
+@app.route('/delete/<int:SNo>')
+def delete(SNo):
+    todo = Todo.query.filter_by(SNo=SNo).first()
     db.session.delete(todo)
-    return "<p>This is my home page</p>"
+    db.session.commit()
+    return redirect("/index")
 
 
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     app.run(debug=True)
